@@ -146,7 +146,17 @@ package/Dockerfile.submariner-operator: bin/submariner-operator
 
 package/Dockerfile.submariner-operator-index: packagemanifests
 
-bin/submariner-operator: $(VENDOR_MODULES) main.go generate-embeddedyamls
+# Generate deep-copy code
+CONTROLLER_DEEPCOPY := apis/submariner/v1alpha1/zz_generated.deepcopy.go
+$(CONTROLLER_DEEPCOPY): $(CONTROLLER_GEN) $(VENDOR_MODULES)
+	cd apis && $(CONTROLLER_GEN) object:headerFile="$(CURDIR)/hack/boilerplate.go.txt,year=$(shell date +"%Y")" paths="./..."
+
+# Generate embedded YAMLs
+EMBEDDED_YAMLS := pkg/subctl/operator/common/embeddedyamls/yamls.go
+$(EMBEDDED_YAMLS): pkg/subctl/operator/common/embeddedyamls/generators/yamls2go.go deploy/crds/submariner.io_servicediscoveries.yaml deploy/crds/submariner.io_brokers.yaml deploy/crds/submariner.io_submariners.yaml deploy/submariner/crds/submariner.io_clusters.yaml deploy/submariner/crds/submariner.io_endpoints.yaml deploy/submariner/crds/submariner.io_gateways.yaml $(shell find deploy/ -name "*.yaml") $(shell find config/rbac/ -name "*.yaml") $(VENDOR_MODULES) $(CONTROLLER_DEEPCOPY)
+	$(GO) generate pkg/subctl/operator/common/embeddedyamls/generate.go
+
+bin/submariner-operator: $(VENDOR_MODULES) main.go $(EMBEDDED_YAMLS)
 	${SCRIPTS_DIR}/compile.sh \
 	--ldflags "-X=github.com/submariner-io/submariner-operator/pkg/version.Version=$(VERSION)" \
 	$@ main.go $(BUILD_ARGS)
@@ -159,7 +169,7 @@ dist/subctl-%.tar.xz: bin/subctl-%
 	tar -cJf $@ --transform "s/^bin/subctl-$(VERSION)/" $<
 
 # Versions may include hyphens so it's easier to use $(VERSION) than to extract them from the target
-bin/subctl-%: generate-embeddedyamls $(shell find pkg/subctl/ -name "*.go") $(VENDOR_MODULES)
+bin/subctl-%: $(EMBEDDED_YAMLS) $(shell find pkg/subctl/ -name "*.go") $(VENDOR_MODULES)
 	mkdir -p $(@D)
 	target=$@; \
 	target=$${target%.exe}; \
@@ -172,18 +182,7 @@ bin/subctl-%: generate-embeddedyamls $(shell find pkg/subctl/ -name "*.go") $(VE
 			   -X=github.com/submariner-io/submariner-operator/apis.DefaultSubmarinerOperatorVersion=$${DEFAULT_IMAGE_VERSION#v}" \
 		--noupx $@ ./pkg/subctl/main.go $(BUILD_ARGS)
 
-ci: generate-embeddedyamls golangci-lint markdownlint unit build images
-
-# Generate deep-copy code
-CONTROLLER_DEEPCOPY := apis/submariner/v1alpha1/zz_generated.deepcopy.go
-$(CONTROLLER_DEEPCOPY): $(CONTROLLER_GEN) $(VENDOR_MODULES)
-	cd apis && $(CONTROLLER_GEN) object:headerFile="$(CURDIR)/hack/boilerplate.go.txt,year=$(shell date +"%Y")" paths="./..."
-
-# Generate embedded YAMLs
-generate-embeddedyamls: pkg/subctl/operator/common/embeddedyamls/yamls.go
-
-pkg/subctl/operator/common/embeddedyamls/yamls.go: pkg/subctl/operator/common/embeddedyamls/generators/yamls2go.go deploy/crds/submariner.io_servicediscoveries.yaml deploy/crds/submariner.io_brokers.yaml deploy/crds/submariner.io_submariners.yaml deploy/submariner/crds/submariner.io_clusters.yaml deploy/submariner/crds/submariner.io_endpoints.yaml deploy/submariner/crds/submariner.io_gateways.yaml $(shell find deploy/ -name "*.yaml") $(shell find config/rbac/ -name "*.yaml") $(VENDOR_MODULES) $(CONTROLLER_DEEPCOPY)
-	$(GO) generate pkg/subctl/operator/common/embeddedyamls/generate.go
+ci: $(EMBEDDED_YAMLS) golangci-lint markdownlint unit build images
 
 # Operator CRDs
 $(CONTROLLER_GEN): $(VENDOR_MODULES)
@@ -270,9 +269,9 @@ scorecard: bundle olm clusters
 olm:
 	$(eval override CLUSTERS_ARGS += --olm)
 
-golangci-lint: generate-embeddedyamls
+golangci-lint: $(EMBEDDED_YAMLS)
 
-unit: generate-embeddedyamls
+unit: $(EMBEDDED_YAMLS)
 
 # Operator SDK
 # On version bumps, the checksum will need to be updated manually.
@@ -293,7 +292,7 @@ $(OPERATOR_SDK):
 	sha256sum -c scripts/operator-sdk.sha256
 	chmod a+x $@
 
-.PHONY: build ci clean generate-clientset generate-embeddedyamls bundle packagemanifests kustomization is-semantic-version olm scorecard
+.PHONY: build ci clean generate-clientset bundle packagemanifests kustomization is-semantic-version olm scorecard
 
 else
 
