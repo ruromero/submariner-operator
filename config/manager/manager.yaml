@@ -14,9 +14,6 @@ metadata:
   labels:
     control-plane: submariner-operator
 spec:
-  selector:
-    matchLabels:
-      control-plane: submariner-operator
   replicas: 1
   template:
     metadata:
