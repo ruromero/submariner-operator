@@ -65,3 +65,33 @@ func vpcPeerGcp(cmd *cobra.Command, args []string) {
 		exit.OnErrorWithMessage(err, "Failed to create VPC Peering on GCP cloud")
 	}
 }
+
+// newCleanAWSVPCPeeringCommand removes a VPC Peering between different AWS clusters
+func newCleanGCPVPCPeeringCommand() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "gcp",
+		Short: "Create a VPC Peering on GCP cloud",
+		Long:  "This command cleans an OpenShift installer-provisioned infrastructure (IPI) on GCP cloud for Submariner uninstallation.",
+		Run:   cleanVpcPeerGcp,
+	}
+
+	gcp.ClientArgs.AddGCPFlags(cmd)
+	targetArgs.AddAWSFlags(cmd)
+	return cmd
+}
+
+// cleanVpcPeerGcp removes peering object and routes between two OCP clusters in AWS
+func cleanVpcPeerGcp(cmd *cobra.Command, args []string) {
+	targetArgs.ValidateFlags()
+	reporter := cloudutils.NewStatusReporter()
+	reporter.Started("Initializing GCP connectivity")
+
+	reporter.Succeeded("")
+	err = gcp.ClientArgs.RunOnGCP(*parentRestConfigProducer, "", false,
+		func(cloud api.Cloud, gwDeployer api.GatewayDeployer, reporter api.Reporter) error {
+			return cloud.CleanupAfterSubmariner(reporter)
+		})
+	if err != nil {
+		exit.OnErrorWithMessage(err, "Failed to create VPC Peering on GCP cloud")
+	}
+}

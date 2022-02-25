@@ -34,3 +34,18 @@ func newGenericVPCPeeringCommand() *cobra.Command {
 func vpcPeerGenericCluster(cmd *cobra.Command, args []string) {
 	// Nothing to peer here
 }
+
+func newCleanGenericVPCPeeringCommand() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "generic",
+		Short: "Removes VPC peering between generic clusters for Submariner",
+		Long:  "This command create a vpc peering between two OCP cloud agnostic clusters",
+		Run:   cleanVpcPeerGenericCluster,
+	}
+
+	return cmd
+}
+
+func cleanVpcPeerGenericCluster(cmd *cobra.Command, args []string) {
+	// Nothing to peer here
+}

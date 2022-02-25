@@ -30,8 +30,10 @@ var (
 // NewCommand returns a new cobra.Command used to prepare a cloud infrastructure.
 func NewCommand(restConfigProducer *restconfig.Producer) *cobra.Command {
 	parentRestConfigProducer = restConfigProducer
+
+	// Create VPC-Peering
 	cmd := &cobra.Command{
-		Use:   "vpc-peering",
+		Use:   "create-vpc-peering",
 		Short: "Create a VPC Peering between clusters",
 		Long:  `This command creates a VPC Peering between different clusters of the same cloud provider.`,
 	}
@@ -39,6 +41,17 @@ func NewCommand(restConfigProducer *restconfig.Producer) *cobra.Command {
 	cmd.AddCommand(newAWSVPCPeeringCommand())
 	cmd.AddCommand(newGCPVPCPeeringCommand())
 	cmd.AddCommand(newGenericVPCPeeringCommand())
+
+	// Clean VPC-Peering
+	cmd := &cobra.Command{
+		Use:   "clean-vpc-peering",
+		Short: "Remove a VPC Peering between clusters",
+		Long:  `This command removes a VPC Peering between different clusters of the same cloud provider.`,
+	}
+
+	cmd.AddCommand(newCleanAWSVPCPeeringCommand())
+	cmd.AddCommand(newCleanGCPVPCPeeringCommand())
+	cmd.AddCommand(newCleanGenericVPCPeeringCommand())
 
 	return cmd
 }

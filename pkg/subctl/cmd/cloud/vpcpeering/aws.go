@@ -53,7 +53,6 @@ func vpcPeerAws(cmd *cobra.Command, args []string) {
 	targetCloud, err := cloudprepareaws.NewCloudFromSettings(targetArgs.CredentialsFile, targetArgs.Profile, targetArgs.InfraID, targetArgs.Region)
 	if err != nil {
 		reporter.Failed(err)
-
 		exit.OnErrorWithMessage(err, "Failed to initialize AWS connectivity")
 	}
 
@@ -64,5 +63,35 @@ func vpcPeerAws(cmd *cobra.Command, args []string) {
 		})
 	if err != nil {
 		exit.OnErrorWithMessage(err, "Failed to create VPC Peering on AWS cloud")
+	}
+}
+
+// newCleanAWSVPCPeeringCommand removes a VPC Peering between different AWS clusters
+func newCleanAWSVPCPeeringCommand() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "aws",
+		Short: "Remove a VPC Peering on AWS cloud",
+		Long:  "This command cleans an OpenShift installer-provisioned infrastructure (IPI) on AWS cloud for Submariner uninstallation.",
+		Run:   cleanVpcPeerAws,
+	}
+
+	aws.ClientArgs.AddAWSFlags(cmd)
+	targetArgs.AddAWSFlags(cmd)
+	return cmd
+}
+
+// cleanVpcPeerAws removes peering object and routes between two OCP clusters in AWS
+func cleanVpcPeerAws(cmd *cobra.Command, args []string) {
+	targetArgs.ValidateFlags()
+	reporter := cloudutils.NewStatusReporter()
+	reporter.Started("Initializing AWS connectivity")
+
+	reporter.Succeeded("")
+	err = aws.ClientArgs.RunOnAWS(*parentRestConfigProducer, "",
+		func(cloud api.Cloud, gwDeployer api.GatewayDeployer, reporter api.Reporter) error {
+			return cloud.CleanupAfterSubmariner(reporter)
+		})
+	if err != nil {
+		exit.OnErrorWithMessage(err, "Failed to remove VPC Peering on AWS cloud")
 	}
 }
