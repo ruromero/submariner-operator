@@ -74,7 +74,7 @@ func vpcPeerAws(cmd *cobra.Command, args []string) {
 func newCleanAWSVPCPeeringCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "aws",
-		Short: "Remove a VPC Peering on AWS cloud",
+		Short: "Removes VPC Peering on AWS cloud",
 		Long:  "This command cleans an OpenShift installer-provisioned infrastructure (IPI) on AWS cloud for Submariner uninstallation.",
 		Run:   cleanVpcPeerAws,
 	}

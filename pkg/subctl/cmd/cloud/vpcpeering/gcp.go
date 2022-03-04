@@ -72,7 +72,7 @@ func vpcPeerGcp(cmd *cobra.Command, args []string) {
 func newCleanGCPVPCPeeringCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "gcp",
-		Short: "Create a VPC Peering on GCP cloud",
+		Short: "Removes VPC Peering on GCP cloud",
 		Long:  "This command cleans an OpenShift installer-provisioned infrastructure (IPI) on GCP cloud for Submariner uninstallation.",
 		Run:   cleanVpcPeerGcp,
 	}
