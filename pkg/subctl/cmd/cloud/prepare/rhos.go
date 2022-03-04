@@ -1,14 +1,10 @@
 /*
 SPDX-License-Identifier: Apache-2.0
-
 Copyright Contributors to the Submariner project.
-
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
-
     http://www.apache.org/licenses/LICENSE-2.0
-
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -38,6 +34,9 @@ func newRHOSPrepareCommand() *cobra.Command {
 	rhos.AddRHOSFlags(cmd)
 	cmd.Flags().IntVar(&gateways, "gateways", DefaultNumGateways,
 		"Number of gateways to deploy")
+	cmd.Flags().StringVar(&rhosGWInstanceType, "gateway-instance", "PnTAE.CPU_16_Memory_32768_Disk_80", "Type of gateway instance machine")
+	cmd.Flags().BoolVar(&dedicatedGateway, "dedicated-gateway", false,
+		"Whether a dedicated gateway node has to be deployed (default false)")
 
 	return cmd
 }
@@ -59,22 +58,22 @@ func prepareRHOS(cmd *cobra.Command, args []string) {
 	}
 
 	// nolint:wrapcheck // No need to wrap errors here.
-	err := rhos.RunOnRHOS(*parentRestConfigProducer, func(cloud api.Cloud, gwDeployer api.GatewayDeployer,
-		reporter api.Reporter) error {
-		if gateways > 0 {
-			gwInput := api.GatewayDeployInput{
-				PublicPorts: gwPorts,
-				Gateways:    gateways,
+	err := rhos.RunOnRHOS(*parentRestConfigProducer, rhosGWInstanceType, dedicatedGateway,
+		func(cloud api.Cloud, gwDeployer api.GatewayDeployer, reporter api.Reporter) error {
+			if gateways > 0 {
+				gwInput := api.GatewayDeployInput{
+					PublicPorts: gwPorts,
+					Gateways:    gateways,
+				}
+
+				err := gwDeployer.Deploy(gwInput, reporter)
+				if err != nil {
+					return errors.Wrap(err, "Deployment failed")
+				}
 			}
 
-			err := gwDeployer.Deploy(gwInput, reporter)
-			if err != nil {
-				return errors.WithMessage(err, "Deployment failed ")
-			}
-		}
-
-		return cloud.PrepareForSubmariner(input, reporter)
-	})
+			return cloud.PrepareForSubmariner(input, reporter)
+		})
 
 	exit.OnErrorWithMessage(err, "Failed to prepare RHOS  cloud")
 }

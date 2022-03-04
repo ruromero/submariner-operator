@@ -27,10 +27,6 @@ import (
 	cloudutils "github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud/utils"
 )
 
-var (
-	targetProjectID string
-)
-
 // NewCommand returns a new cobra.Command used to create a VPC Peering on a cloud infrastructure.
 func newGCPVPCPeeringCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -87,7 +83,7 @@ func cleanVpcPeerGcp(cmd *cobra.Command, args []string) {
 	reporter.Started("Initializing GCP connectivity")
 
 	reporter.Succeeded("")
-	err = gcp.ClientArgs.RunOnGCP(*parentRestConfigProducer, "", false,
+	err := gcp.ClientArgs.RunOnGCP(*parentRestConfigProducer, "", false,
 		func(cloud api.Cloud, gwDeployer api.GatewayDeployer, reporter api.Reporter) error {
 			return cloud.CleanupAfterSubmariner(reporter)
 		})

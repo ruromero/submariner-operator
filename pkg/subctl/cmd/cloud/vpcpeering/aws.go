@@ -66,7 +66,7 @@ func vpcPeerAws(cmd *cobra.Command, args []string) {
 	}
 }
 
-// newCleanAWSVPCPeeringCommand removes a VPC Peering between different AWS clusters
+// newCleanAWSVPCPeeringCommand removes a VPC Peering between different AWS clusters.
 func newCleanAWSVPCPeeringCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "aws",
@@ -87,7 +87,7 @@ func cleanVpcPeerAws(cmd *cobra.Command, args []string) {
 	reporter.Started("Initializing AWS connectivity")
 
 	reporter.Succeeded("")
-	err = aws.ClientArgs.RunOnAWS(*parentRestConfigProducer, "",
+	err := aws.ClientArgs.RunOnAWS(*parentRestConfigProducer, "",
 		func(cloud api.Cloud, gwDeployer api.GatewayDeployer, reporter api.Reporter) error {
 			return cloud.CleanupAfterSubmariner(reporter)
 		})

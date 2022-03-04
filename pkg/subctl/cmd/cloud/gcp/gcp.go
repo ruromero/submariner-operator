@@ -84,7 +84,7 @@ func (args *Args) AddGCPFlags(command *cobra.Command) {
 	command.Flags().StringVar(&args.CredentialsFile, "credentials", defaultCredentials, "GCP credentials configuration file")
 }
 
-// ValidateFlags if the OcpMetadataFile is provided it overrides the infra-id and region flags
+// ValidateFlags if the OcpMetadataFile is provided it overrides the infra-id and region flags.
 func (args *Args) ValidateFlags() {
 	if args.OcpMetadataFile != "" {
 		err := args.initializeFlagsFromOCPMetadata()
