@@ -19,6 +19,7 @@ limitations under the License.
 package vpcpeering
 
 import (
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/cloud-prepare/pkg/api"
 	cloudpreparegcp "github.com/submariner-io/cloud-prepare/pkg/gcp"
@@ -38,31 +39,36 @@ func newGCPVPCPeeringCommand() *cobra.Command {
 
 	gcp.ClientArgs.AddGCPFlags(cmd)
 	targetArgs.AddAWSFlags(cmd)
+
 	return cmd
 }
 
 func vpcPeerGcp(cmd *cobra.Command, args []string) {
 	targetArgs.ValidateFlags()
+
 	reporter := cloudutils.NewStatusReporter()
+
 	reporter.Started("Initializing GCP connectivity")
 
-	cloudInfo, err := cloudpreparegcp.NewCloudInfoFromSettings(targetArgs.CredentialsFile, targetArgs.Profile, targetArgs.InfraID, targetArgs.Region)
+	cloudInfo, err := cloudpreparegcp.NewCloudInfoFromSettings(targetArgs.CredentialsFile,
+		targetArgs.Profile, targetArgs.InfraID, targetArgs.Region)
 	if err != nil {
 		reporter.Failed(err)
 		exit.OnErrorWithMessage(err, "Failed to initialize GCP connectivity")
 	}
 
 	reporter.Succeeded("")
+
 	err = gcp.ClientArgs.RunOnGCP(*parentRestConfigProducer, "", false,
 		func(cloud api.Cloud, gwDeployer api.GatewayDeployer, reporter api.Reporter) error {
-			return cloud.CreateVpcPeering(cloudpreparegcp.NewCloud(*cloudInfo), reporter)
+			return errors.Wrap(err, cloud.CreateVpcPeering(cloudpreparegcp.NewCloud(*cloudInfo), reporter).Error())
 		})
 	if err != nil {
 		exit.OnErrorWithMessage(err, "Failed to create VPC Peering on GCP cloud")
 	}
 }
 
-// newCleanAWSVPCPeeringCommand removes a VPC Peering between different AWS clusters
+// newCleanAWSVPCPeeringCommand removes a VPC Peering between different AWS clusters.
 func newCleanGCPVPCPeeringCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "gcp",
@@ -73,19 +79,25 @@ func newCleanGCPVPCPeeringCommand() *cobra.Command {
 
 	gcp.ClientArgs.AddGCPFlags(cmd)
 	targetArgs.AddAWSFlags(cmd)
+
 	return cmd
 }
 
-// cleanVpcPeerGcp removes peering object and routes between two OCP clusters in AWS
+// cleanVpcPeerGcp removes peering object and routes between two OCP clusters in AWS.
 func cleanVpcPeerGcp(cmd *cobra.Command, args []string) {
 	targetArgs.ValidateFlags()
+
 	reporter := cloudutils.NewStatusReporter()
+
 	reporter.Started("Initializing GCP connectivity")
 
 	reporter.Succeeded("")
-	err := gcp.ClientArgs.RunOnGCP(*parentRestConfigProducer, "", false,
+
+	var err error
+
+	err = gcp.ClientArgs.RunOnGCP(*parentRestConfigProducer, "", false,
 		func(cloud api.Cloud, gwDeployer api.GatewayDeployer, reporter api.Reporter) error {
-			return cloud.CleanupAfterSubmariner(reporter)
+			return errors.Wrap(err, cloud.CleanupAfterSubmariner(reporter).Error())
 		})
 	if err != nil {
 		exit.OnErrorWithMessage(err, "Failed to create VPC Peering on GCP cloud")

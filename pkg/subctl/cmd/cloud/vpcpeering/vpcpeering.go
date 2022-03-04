@@ -23,9 +23,7 @@ import (
 	"github.com/submariner-io/submariner-operator/internal/restconfig"
 )
 
-var (
-	parentRestConfigProducer *restconfig.Producer
-)
+var parentRestConfigProducer *restconfig.Producer
 
 // NewCommand returns a new cobra.Command used to prepare a cloud infrastructure.
 func NewCommand(restConfigProducer *restconfig.Producer) *cobra.Command {

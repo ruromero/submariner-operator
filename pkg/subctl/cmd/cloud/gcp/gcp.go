@@ -133,6 +133,7 @@ func (args *Args) RunOnGCP(restConfigProducer restconfig.Producer, gwInstanceTyp
 	// TODO: Ideally we should be able to specify the image for GWNode, but it was seen that
 	// with certain images, the instance is not coming up. Needs to be investigated further.
 	gwDeployer := gcp.NewOcpGatewayDeployer(*gcpCloudInfo, msDeployer, gwInstanceType, "", dedicatedGWNodes, k8sClientSet)
+
 	exit.OnErrorWithMessage(err, "Failed to initialize a GatewayDeployer config")
 
 	return function(gcp.NewCloud(*gcpCloudInfo), gwDeployer, reporter)
@@ -142,6 +143,7 @@ func (args *Args) getFlagName(flag string) string {
 	if args.cloudName == "" {
 		return flag
 	}
+
 	return fmt.Sprintf("%v-%v", args.cloudName, flag)
 }
 
@@ -161,10 +163,10 @@ func (args *Args) initializeFlagsFromOCPMetadata() error {
 	}
 
 	var metadata struct {
-		infraID string `json:"infraID"`
+		InfraID string `json:"infraID"`
 		GCP     struct {
-			region    string `json:"region"`
-			projectID string `json:"projectID"`
+			Region    string `json:"region"`
+			ProjectID string `json:"projectID"`
 		} `json:"gcp"`
 	}
 
@@ -173,9 +175,9 @@ func (args *Args) initializeFlagsFromOCPMetadata() error {
 		return errors.Wrap(err, "error unmarshalling data")
 	}
 
-	args.InfraID = metadata.infraID
-	args.Region = metadata.GCP.region
-	args.ProjectID = metadata.GCP.projectID
+	args.InfraID = metadata.InfraID
+	args.Region = metadata.GCP.Region
+	args.ProjectID = metadata.GCP.ProjectID
 
 	return nil
 }

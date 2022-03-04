@@ -19,6 +19,7 @@ limitations under the License.
 package vpcpeering
 
 import (
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/cloud-prepare/pkg/api"
 	cloudprepareaws "github.com/submariner-io/cloud-prepare/pkg/aws"
@@ -27,9 +28,7 @@ import (
 	cloudutils "github.com/submariner-io/submariner-operator/pkg/subctl/cmd/cloud/utils"
 )
 
-var (
-	targetArgs = aws.NewArgs("target")
-)
+var targetArgs = aws.NewArgs("target")
 
 // NewCommand returns a new cobra.Command used to create a VPC Peering on a cloud infrastructure.
 func newAWSVPCPeeringCommand() *cobra.Command {
@@ -42,24 +41,29 @@ func newAWSVPCPeeringCommand() *cobra.Command {
 
 	aws.ClientArgs.AddAWSFlags(cmd)
 	targetArgs.AddAWSFlags(cmd)
+
 	return cmd
 }
 
 func vpcPeerAws(cmd *cobra.Command, args []string) {
 	targetArgs.ValidateFlags()
+
 	reporter := cloudutils.NewStatusReporter()
+
 	reporter.Started("Initializing AWS connectivity")
 
-	targetCloud, err := cloudprepareaws.NewCloudFromSettings(targetArgs.CredentialsFile, targetArgs.Profile, targetArgs.InfraID, targetArgs.Region)
+	targetCloud, err := cloudprepareaws.NewCloudFromSettings(targetArgs.CredentialsFile,
+		targetArgs.Profile, targetArgs.InfraID, targetArgs.Region)
 	if err != nil {
 		reporter.Failed(err)
 		exit.OnErrorWithMessage(err, "Failed to initialize AWS connectivity")
 	}
 
 	reporter.Succeeded("")
+
 	err = aws.ClientArgs.RunOnAWS(*parentRestConfigProducer, "",
 		func(cloud api.Cloud, gwDeployer api.GatewayDeployer, reporter api.Reporter) error {
-			return cloud.CreateVpcPeering(targetCloud, reporter)
+			return errors.Wrap(err, cloud.CreateVpcPeering(targetCloud, reporter).Error())
 		})
 	if err != nil {
 		exit.OnErrorWithMessage(err, "Failed to create VPC Peering on AWS cloud")
@@ -77,19 +81,24 @@ func newCleanAWSVPCPeeringCommand() *cobra.Command {
 
 	aws.ClientArgs.AddAWSFlags(cmd)
 	targetArgs.AddAWSFlags(cmd)
+
 	return cmd
 }
 
-// cleanVpcPeerAws removes peering object and routes between two OCP clusters in AWS
+// cleanVpcPeerAws removes peering object and routes between two OCP clusters in AWS.
 func cleanVpcPeerAws(cmd *cobra.Command, args []string) {
 	targetArgs.ValidateFlags()
-	reporter := cloudutils.NewStatusReporter()
-	reporter.Started("Initializing AWS connectivity")
 
+	reporter := cloudutils.NewStatusReporter()
+
+	reporter.Started("Initializing AWS connectivity")
 	reporter.Succeeded("")
-	err := aws.ClientArgs.RunOnAWS(*parentRestConfigProducer, "",
+
+	var err error
+
+	err = aws.ClientArgs.RunOnAWS(*parentRestConfigProducer, "",
 		func(cloud api.Cloud, gwDeployer api.GatewayDeployer, reporter api.Reporter) error {
-			return cloud.CleanupAfterSubmariner(reporter)
+			return errors.Wrap(err, cloud.CleanupAfterSubmariner(reporter).Error())
 		})
 	if err != nil {
 		exit.OnErrorWithMessage(err, "Failed to remove VPC Peering on AWS cloud")

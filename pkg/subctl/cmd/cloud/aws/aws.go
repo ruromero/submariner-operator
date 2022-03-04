@@ -67,7 +67,8 @@ func (args *Args) AddAWSFlags(command *cobra.Command) {
 	command.Flags().StringVar(&args.OcpMetadataFile, args.getFlagName("ocp-metadata"), "",
 		"OCP metadata.json file (or directory containing it) to read AWS infra ID and Region from (Takes precedence over the flags)")
 	command.Flags().StringVar(&args.Profile, args.getFlagName("profile"), aws.DefaultProfile(), "AWS Profile to use for credentials")
-	command.Flags().StringVar(&args.CredentialsFile, args.getFlagName("credentials"), aws.DefaultCredentialsFile(), "AWS credentials configuration file")
+	command.Flags().StringVar(&args.CredentialsFile, args.getFlagName("credentials"), aws.DefaultCredentialsFile(),
+		"AWS credentials configuration file")
 }
 
 // ValidateFlags if the OcpMetadataFile is provided it overrides the infra-id and region flags.
@@ -120,6 +121,7 @@ func (args *Args) getFlagName(flag string) string {
 	if args.cloudName == "" {
 		return flag
 	}
+
 	return fmt.Sprintf("%v-%v", args.cloudName, flag)
 }
 
