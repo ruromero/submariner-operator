@@ -68,13 +68,13 @@ func vpcPeerGcp(cmd *cobra.Command, args []string) {
 	}
 }
 
-// newCleanAWSVPCPeeringCommand removes a VPC Peering between different AWS clusters.
-func newCleanGCPVPCPeeringCommand() *cobra.Command {
+// newCleanupAWSVPCPeeringCommand removes a VPC Peering between different AWS clusters.
+func newCleanupGCPVPCPeeringCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "gcp",
 		Short: "Removes VPC Peering on GCP cloud",
 		Long:  "This command cleans an OpenShift installer-provisioned infrastructure (IPI) on GCP cloud for Submariner uninstallation.",
-		Run:   cleanVpcPeerGcp,
+		Run:   cleanupVpcPeerGcp,
 	}
 
 	gcp.ClientArgs.AddGCPFlags(cmd)
@@ -83,8 +83,8 @@ func newCleanGCPVPCPeeringCommand() *cobra.Command {
 	return cmd
 }
 
-// cleanVpcPeerGcp removes peering object and routes between two OCP clusters in AWS.
-func cleanVpcPeerGcp(cmd *cobra.Command, args []string) {
+// cleanupVpcPeerGcp removes peering object and routes between two OCP clusters in AWS.
+func cleanupVpcPeerGcp(cmd *cobra.Command, args []string) {
 	targetArgs.ValidateFlags()
 
 	reporter := cloudutils.NewStatusReporter()

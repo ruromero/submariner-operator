@@ -16,4 +16,4 @@ vendor/
 junit.xml
 Makefile.dapper
 Dockerfile.*
-
+.*.swp
